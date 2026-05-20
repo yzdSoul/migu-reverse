@@ -93,15 +93,15 @@ function simulateRequest(opts) {
         url = 'https://webupload.miguvideo.com/gateway/gk_new/videoxth/queryBusinessData',
         method = 'POST',
         data = {},
-        userId = '1590215774',
-        userToken = 'nlpsAB562B71EB947B0EB92E',
-        clientId = '27fb3129-5a54-45bc-8af1-7dc8f1155501',
+        userId = '',
+        userToken = '',
+        clientId = '',
         carrierCode = 'CU',
-        mobile = '17128809491',
-        userNum = '8617128809491',
-        sign = 'EA1CAA2DD6F99F2BA0E2FD5FAC940A35',
-        passId = '571375186002379955',
-        expiredOn = '1784257731000',
+        mobile = '',
+        userNum = '',
+        sign = '',
+        passId = '',
+        expiredOn = '',
         channel = 'H5',
         appCode = 'miguvideo_default_www',
     } = opts;
@@ -128,7 +128,7 @@ function simulateRequest(opts) {
         passId: passId,
         userToken: userToken,
         expiredOn: expiredOn,
-        blurMobile: mobile.substring(0,3) + '****' + mobile.substring(-4),
+        blurMobile: mobile.substring(0,3) + '****' + mobile.slice(-4),
         encrypted: true
     });
     
