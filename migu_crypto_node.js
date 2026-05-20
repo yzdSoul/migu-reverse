@@ -66,7 +66,7 @@ function riskDecrypt(hexInput) {
     return CryptoJS.enc.Utf8.stringify(decrypted).toString();
 }
 
-// === POST 模拟 (module 24747 e.post) ===
+// === POST 模拟 (module 24747 e.post - www.miguvideo.com API) ===
 function simulatePost(data, key) {
     const timestamp = Date.now();
     const dataStr = typeof data === 'object' ? JSON.stringify(data) : String(data);
@@ -85,6 +85,99 @@ function simulatePost(data, key) {
             'terminalId': 'www'
         }
     };
+}
+
+// === 完整请求模拟 (webupload.miguvideo.com API) ===
+function simulateRequest(opts) {
+    const {
+        url = 'https://webupload.miguvideo.com/gateway/gk_new/videoxth/queryBusinessData',
+        method = 'POST',
+        data = {},
+        userId = '1590215774',
+        userToken = 'nlpsAB562B71EB947B0EB92E',
+        clientId = '27fb3129-5a54-45bc-8af1-7dc8f1155501',
+        carrierCode = 'CU',
+        mobile = '17128809491',
+        userNum = '8617128809491',
+        sign = 'EA1CAA2DD6F99F2BA0E2FD5FAC940A35',
+        passId = '571375186002379955',
+        expiredOn = '1784257731000',
+        channel = 'H5',
+        appCode = 'miguvideo_default_www',
+    } = opts;
+
+    const key = '';
+    const timestamp = Date.now();
+    const dataStr = typeof data === 'object' ? JSON.stringify(data) : String(data);
+    
+    // Encrypt body
+    const encryptedBody = ecbEncrypt(dataStr, key);
+    
+    // ensign = MD5(data + key + timestamp).toUpperCase()
+    const ensign = CryptoJS.MD5(dataStr + key + timestamp).toString().toUpperCase();
+    
+    // userInfo header (with base64-encoded mobile)
+    function toBase64(str) {
+        return Buffer.from(str).toString('base64');
+    }
+    const userInfoHeader = JSON.stringify({
+        userId: userId,
+        userNum: toBase64(userNum),
+        mobile: toBase64(mobile),
+        carrierCode: carrierCode,
+        passId: passId,
+        userToken: userToken,
+        expiredOn: expiredOn,
+        blurMobile: mobile.substring(0,3) + '****' + mobile.substring(-4),
+        encrypted: true
+    });
+    
+    return {
+        method: method,
+        url: url,
+        headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'en,zh-CN;q=0.9,zh;q=0.8',
+            'Cache-Control': 'no-cache',
+            'Content-Type': 'application/json',
+            'Origin': 'https://www.miguvideo.com',
+            'Referer': 'https://www.miguvideo.com/',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-site',
+            'Support-Pendant': '1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36',
+            'sec-ch-ua': '"Google Chrome";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            // Business headers
+            'SDKCEId': clientId,
+            'appCode': appCode,
+            'appId': 'miguvideo',
+            'carrierCode': carrierCode,
+            'channel': channel,
+            'clientId': clientId,
+            'codeVersion': 'V1',
+            'ensign': ensign,
+            'requestEncryption': 'true',
+            'sign': sign,
+            'terminalId': 'www',
+            'timestamp': String(timestamp),
+            'userId': userId,
+            'userInfo': userInfoHeader,
+            'userToken': userToken,
+        },
+        body: encryptedBody
+    };
+}
+
+function formatCurl(req) {
+    let curl = `curl '${req.url}' \\\n  -X ${req.method}`;
+    for (const [key, val] of Object.entries(req.headers)) {
+        curl += ` \\\n  -H '${key}: ${val}'`;
+    }
+    curl += ` \\\n  --data-raw '${req.body}'`;
+    return curl;
 }
 
 // === 主逻辑 ===
@@ -154,6 +247,18 @@ try {
             }
         }
     }
+    else if (action === 'request') {
+        // 生成完整请求体（JSON 格式）
+        const jsonData = JSON.parse(data || '{}');
+        const req = simulateRequest({ data: jsonData });
+        console.log(JSON.stringify(req, null, 2));
+    }
+    else if (action === 'curl') {
+        // 生成 curl 命令
+        const jsonData = JSON.parse(data || '{}');
+        const req = simulateRequest({ data: jsonData });
+        console.log(formatCurl(req));
+    }
     else {
         console.log(`Available commands:
   enc <data>         - ECB encrypt with empty key
@@ -163,7 +268,9 @@ try {
   cbc-dec <data> --key <key>    - CBC decrypt
   risk-dec <hex>     - Decrypt risk msg with key "AwBwCw1l2o3g4i5n"
   gen-key            - Generate current time key (16 digits)
-  batch <cipher>     - Try multiple decryption methods`);
+  batch <cipher>     - Try multiple decryption methods
+  request <json>     - Generate full API request (webupload)
+  curl <json>        - Generate curl command (webupload)`);
     }
 } catch(e) {
     console.error('Error:', e.message);
