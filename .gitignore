@@ -1,0 +1,15 @@
+# Node
+node_modules/
+package.json
+package-lock.json
+
+# Sensitive data - contains user tokens/phone numbers
+js-files/
+response.txt
+migu_api.js
+test_encrypt.js
+test_api.py
+cors-proxy.js
+
+# Large files
+*.chunk.js
